@@ -4,28 +4,26 @@
 #include <soem/soem.h>
 #include "panel.hpp"
 
-class PanelAdapters : public Panel {
+class WelcomePanel : public Panel {
 public:
-	PANEL_CONSTRUCTOR(PanelAdapters);
-	~PanelAdapters() override {}
+	PANEL_CONSTRUCTOR(WelcomePanel);
+	~WelcomePanel() override {}
 
 	const char *get_selected_iface() const {
 		return adapters.size() > 0 ? adapters[selected_idx].c_str() : "";
 	}
-
-	bool was_iface_changed() {
-		return iface_changed;
-	}
-
-	void reset_flag() { iface_changed = false; }
+	
+	bool is_done() const { return done; }
 
 private:
 	size_t selected_idx = 0;
-	bool iface_changed = false;
 	std::vector<std::string>adapters;
+	bool done = false;
 
 	void render_this() override {
-		if (ImGui::BeginCombo("Available adapters", get_selected_iface())) {
+		ImGui::SetWindowSize(ImVec2{334, 114});
+		ImGui::Text("Welcome! Please select network adapter, \nthat you will use for EtherCAT communication");
+		if (ImGui::BeginCombo("Ifaces", get_selected_iface())) {
 			for (size_t i = 0; i < adapters.size(); i++) {
 				const bool selected = (selected_idx == i);
 				if (ImGui::Selectable(adapters[i].c_str(), selected)) {
@@ -39,7 +37,7 @@ private:
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Select") && adapters.size() > 0) {
-			iface_changed = true;
+			done = true;
 		}
 	}
 

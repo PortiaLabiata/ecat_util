@@ -8,27 +8,34 @@ int main(int argc, char **argv) {
 	(void)argv;
 
 	ECATMaster *master = nullptr;
+	PanelSlaves *slaves = nullptr;
+	PanelConsole *console = nullptr;
 
 	auto window = std::make_unique<Window>(ImVec2{600, 600}, "EtherCAT Utility");
-	auto adapters = std::make_unique<PanelAdapters>(ImVec2{200, 200}, "Network adapters");
-	auto slaves = std::make_unique<PanelSlaves>(ImVec2{200, 200}, "Slaves");
-	auto console = std::make_unique<PanelConsole>(ImVec2{200, 200});
-
-	window->add_panel(adapters.get());
-	window->add_panel(slaves.get());
-	window->add_panel(console.get());
+	auto welcome = new WelcomePanel(ImVec2{600, 600}, "Welcome");
+	window->set_welcome_panel(welcome);
 
 	while (!window->should_exit()) {
 		window->loop();
+		if (welcome && welcome->is_done()) {
+			window->set_state(Window::State::main);
+			console = new PanelConsole(ImVec2{600, 600});
 
-		if (adapters->was_iface_changed()) {
-			adapters->reset_flag();
-			master = new ECATMaster(adapters->get_selected_iface());
+			auto adapter_name = welcome->get_selected_iface();
+			master = new ECATMaster(adapter_name);
+			slaves = new PanelSlaves(ImVec2{600, 600}, "Slaves");
 			slaves->attach_ecat(master);
-			master->scan_bus();
+
+			window->add_panel(console);
+			window->add_panel(slaves);
+
+			delete welcome;
+			welcome = nullptr;
 		}
 	}
 
+	delete console;
+	delete slaves;
 	delete master;
 	return 0;
 }

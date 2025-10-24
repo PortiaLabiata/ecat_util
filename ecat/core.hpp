@@ -1,6 +1,7 @@
 #pragma once
 #include <inttypes.h>
 #include <vector>
+#include <cstdio>
 #include <soem/soem.h>
 
 class ECATSlave {
@@ -9,16 +10,8 @@ public:
 	ECATSlave(ecx_context *ctx, size_t index);
 	~ECATSlave() = default;
 
-	struct basicinfo_t {
-		const char *name;
-		uint32_t vendor;
-		uint16_t device_type;
-		uint16_t address;
-		ec_state state;
-	};
-
-	const basicinfo_t &get_slaveinfo() const {
-		return basicinfo;
+	const ec_slavet &get_slaveinfo() const {
+		return ctx->slavelist[index];
 	}
 
 	void set_state(ec_state state, unsigned int timeout_ms);
@@ -26,12 +19,26 @@ public:
 
 private:
 	void fill_from_ecx(const ec_slavet &slave);
-	basicinfo_t basicinfo;
 
 	// I hate it, but should work, since ctx is not supposed to be null
 	// until the execution stops
 	ecx_context *ctx;
 	const size_t index;
+};
+
+class ECATSlaveDummy : public ECATSlave {
+public:
+	ECATSlaveDummy() : ECATSlave(nullptr, 0) {
+		std::sprintf(mock_ctx.slavelist[0].name, "-");
+	}
+
+	~ECATSlaveDummy() = default;
+
+	const ec_slavet &get_slaveinfo() const {
+		return mock_ctx.slavelist[0];	
+	}
+private:
+	ecx_context mock_ctx;
 };
 
 class ECATMaster {
@@ -58,19 +65,6 @@ private:
 	int expected_wkc;
 };
 
-/* Exceptions */
-struct IfaceError {
-	const char *iface;
-};
-
-struct SlaveConfigError {
-	const char *circumstances;
-};
-
 struct BusReadError {
-	const char *circumstances;
-};
-
-struct BufferError {
 	const char *circumstances;
 };

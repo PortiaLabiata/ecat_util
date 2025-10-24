@@ -25,6 +25,6 @@ add_subdirectory(${LIB_PATH}/imgui)
 add_subdirectory(ecat)
 target_include_directories(ecat PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+target_link_libraries(main PUBLIC ecat)
 target_link_libraries(main PUBLIC soem)
 target_link_libraries(main PUBLIC ImGui)
-target_link_libraries(main PUBLIC ecat)

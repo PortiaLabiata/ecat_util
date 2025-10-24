@@ -14,6 +14,7 @@ Window::Window(ImVec2 dims, const char *title) {
 	ImGui::CreateContext();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 130");
+	state = State::welcome;
 }
 
 Window::~Window() {
@@ -45,8 +46,16 @@ void Window::loop() {
 }
 
 void Window::render_panels() {
-	for (auto panel : panels) {
-		panel->render();
+	switch (state) {
+		case State::welcome:
+			welcome_screen->render();
+			break;
+		case State::main:
+		default:
+			for (auto panel : panels) {
+				panel->render();
+			}
+			break;
 	}
 }
 

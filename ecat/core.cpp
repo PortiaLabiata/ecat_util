@@ -22,17 +22,14 @@ void ECATMaster::scan_bus() {
 	ecx_configdc(&ctx);
 	expected_wkc = (group->outputsWKC * 2) + group->inputsWKC;
 
+	slaves.clear();
 	for (int i = 0; i < ctx.slavecount; i++) {
 		slaves.emplace_back(ECATSlave(&ctx, i));		
 	}
 }
 
-ECATSlave::ECATSlave(ecx_context *ctx, size_t _index) : index(_index) {
-	ec_slavet *slave = &ctx->slavelist[index];
-	basicinfo.name = slave->name;
-	basicinfo.vendor = slave->eep_man;
-	basicinfo.device_type = slave->Dtype;
-	basicinfo.address = slave->configadr;
+ECATSlave::ECATSlave(ecx_context *_ctx, size_t _index) : index(_index) {
+	ctx = _ctx;	
 }
 
 void ECATSlave::set_state(ec_state state, unsigned int timeout_us) {

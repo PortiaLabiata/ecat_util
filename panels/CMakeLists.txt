@@ -1,1 +1,1 @@
-add_library(panels INTERFACE panels.hpp)
+add_library(panels OBJECT panel_slaves.cpp)
