@@ -3,12 +3,11 @@
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 
-#include "vector.hpp"
-#include "panel.hpp"
+#include "panels/panel.hpp"
 
 class Window {
 public:
-	Window(Vector2i dims, const char *title);
+	Window(ImVec2 dims, const char *title);
 	~Window();
 
 	void loop();

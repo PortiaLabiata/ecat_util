@@ -40,6 +40,12 @@ public:
 	~ECATMaster();
 
 	void scan_bus();
+	const std::vector<ECATSlave> &get_slaves() const {
+		return slaves;
+	}
+
+	int get_expected_wc() const { return expected_wkc; }
+
 private:
 	static const size_t IOMAP_SIZE = 4096;
 	
@@ -62,5 +68,9 @@ struct SlaveConfigError {
 };
 
 struct BusReadError {
+	const char *circumstances;
+};
+
+struct BufferError {
 	const char *circumstances;
 };

@@ -1,8 +1,9 @@
 #include "core.hpp"
+#include "panels/panel_console.hpp"
 
 ECATMaster::ECATMaster(const char *iface_name) {
 	if (ecx_init(&ctx, iface_name) <= 0) {
-		throw IfaceError(iface_name);
+		PanelConsole::get_singleton()->log(PanelConsole::LogLevel::error, "Couldn't init iface, run as root");
 	}
 }
 
@@ -12,11 +13,11 @@ ECATMaster::~ECATMaster() {
 
 void ECATMaster::scan_bus() {
 	if (ecx_config_init(&ctx) <= 0) {
-		throw SlaveConfigError("Couldn't config slaves");
+			PanelConsole::get_singleton()->log(PanelConsole::LogLevel::error, "Couldn't config any slaves");
 	}
 	group = &ctx.grouplist[0];
 	if (ecx_config_map_group(&ctx, reinterpret_cast<void*>(iomap), 0) > static_cast<int>(IOMAP_SIZE)) {
-		throw SlaveConfigError("IOMap overflow");
+			PanelConsole::get_singleton()->log(PanelConsole::LogLevel::error, "IOMap buffer overflow");
 	}
 	ecx_configdc(&ctx);
 	expected_wkc = (group->outputsWKC * 2) + group->inputsWKC;

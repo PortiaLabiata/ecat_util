@@ -1,19 +1,12 @@
 #pragma once
 #include <imgui.h>
-#include "vector.hpp"
 
-#define PANEL_CONSTRUCTOR(__CLASSNAME__) __CLASSNAME__(Vector2i dims, const char *title) : Panel(dims, title) {}
+#define PANEL_CONSTRUCTOR(__CLASSNAME__) __CLASSNAME__(ImVec2 size, const char *title) : Panel(size, title) {}
 
 class Panel {
 public:
-	Panel(Vector2i dims, const char *_title) : title(_title) {
-		size = {
-			static_cast<float>(dims.x),
-			static_cast<float>(dims.y)
-		};
-	}
-
-	~Panel() = default;
+	Panel(ImVec2 _size, const char *_title) : title(_title), size(_size) {}
+	virtual ~Panel() {}
 
 	void render() {
 		if (deactivated) {
@@ -25,18 +18,19 @@ public:
 	}
 
 	void deactivate() { deactivated = true; }
-	void reactivate() {deactivated = false; }
+	void reactivate() { deactivated = false; }
 
 private:
 	virtual void render_this() = 0;
 	const char *title;
-	ImVec2 size;
+	const ImVec2 size;
 	bool deactivated = false;
 };
 
 class PanelEmpty : public Panel {
 public:
-	PanelEmpty(Vector2i dims, const char *title) : Panel(dims, title) {};
+	PANEL_CONSTRUCTOR(PanelEmpty);
+	~PanelEmpty() override {}
 private:	
 	void render_this() override {
 		ImGui::Button("Click me!");

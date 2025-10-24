@@ -5,6 +5,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(LIB_PATH lib)
+set(SUBMODULES panels common)
+
 add_compile_options(
 	-Werror
 	-Wall
@@ -13,13 +16,15 @@ add_compile_options(
 )
 
 add_executable(main main.cpp window.cpp)
-include_directories("lib/imgui/")
-include_directories("lib/imgui/backends")
-include_directories("lib/SOEM/include")
-add_subdirectory("lib/SOEM")
-add_subdirectory("lib/imgui")
-add_subdirectory("slave")
+include_directories(${LIB_PATH}/imgui)
+include_directories(${LIB_PATH}/imgui/backends)
+include_directories(${LIB_PATH}/SOEM/include)
+
+add_subdirectory(${LIB_PATH}/SOEM)
+add_subdirectory(${LIB_PATH}/imgui)
+add_subdirectory(ecat)
+target_include_directories(ecat PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(main PUBLIC soem)
 target_link_libraries(main PUBLIC ImGui)
-target_link_libraries(main PUBLIC slave)
+target_link_libraries(main PUBLIC ecat)

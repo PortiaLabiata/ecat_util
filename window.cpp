@@ -1,9 +1,8 @@
-#include <iostream>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include "window.hpp"
 
-Window::Window(Vector2i dims, const char *title) {
+Window::Window(ImVec2 dims, const char *title) {
 	if (!glfwInit()) {
 		return;
 	}

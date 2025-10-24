@@ -7,13 +7,21 @@
 class PanelAdapters : public Panel {
 public:
 	PANEL_CONSTRUCTOR(PanelAdapters);
+	~PanelAdapters() override {}
 
 	const char *get_selected_iface() const {
 		return adapters.size() > 0 ? adapters[selected_idx].c_str() : "";
 	}
 
+	bool was_iface_changed() {
+		return iface_changed;
+	}
+
+	void reset_flag() { iface_changed = false; }
+
 private:
 	size_t selected_idx = 0;
+	bool iface_changed = false;
 	std::vector<std::string>adapters;
 
 	void render_this() override {
@@ -31,7 +39,7 @@ private:
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Select") && adapters.size() > 0) {
-			deactivate();
+			iface_changed = true;
 		}
 	}
 
