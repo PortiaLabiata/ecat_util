@@ -6,6 +6,7 @@
 
 class ECATSlave {
 	friend class ECATMaster;
+	friend class ECATSlaveDummy;
 public:
 	ECATSlave(ecx_context *ctx, size_t index);
 	~ECATSlave() = default;
@@ -29,7 +30,8 @@ private:
 class ECATSlaveDummy : public ECATSlave {
 public:
 	ECATSlaveDummy() : ECATSlave(nullptr, 0) {
-		std::sprintf(mock_ctx.slavelist[0].name, "-");
+		ctx = &mock_ctx;
+		mock_ctx.slavelist[0].eep_man = 42;
 	}
 
 	~ECATSlaveDummy() = default;

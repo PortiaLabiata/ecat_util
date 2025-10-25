@@ -1,5 +1,6 @@
 #pragma once
 #include <imgui.h>
+#include <ecat/core.hpp>
 
 #define PANEL_CONSTRUCTOR(__CLASSNAME__) __CLASSNAME__(ImVec2 size, const char *title) : Panel(size, title) {}
 
@@ -9,7 +10,7 @@ struct ExtensibleEnum {};
 class Panel {
 public:
 	Panel(ImVec2 _size, const char *_title) : title(_title), size(_size) {}
-	virtual ~Panel() {}
+	virtual ~Panel() {}; 
 
 	void render() {
 		ImGui::Begin(title);
@@ -26,9 +27,19 @@ private:
 class PanelEmpty : public Panel {
 public:
 	PANEL_CONSTRUCTOR(PanelEmpty);
-	~PanelEmpty() override {}
 private:	
 	void render_this() override {
 		ImGui::Button("Click me!");
 	}
+};
+
+class SlaveView {
+public:
+	SlaveView() {}
+	virtual ~SlaveView() {}
+
+	void set_slave(ECATSlave *_slave) { slave = _slave; }
+	virtual void render() = 0;
+protected:
+	ECATSlave *slave;
 };

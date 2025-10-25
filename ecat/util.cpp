@@ -17,7 +17,7 @@ std::string mb_to_str(uint16_t bitmask) {
 	return res;
 }
 
-std::string fmmu_to_str(uint8_t func) {
+const char *fmmu_to_str(uint8_t func) {
 	switch (func) {
 		case 0:
 			return "None";

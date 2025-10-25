@@ -1,6 +1,5 @@
 #pragma once
 #include "panel.hpp"
-#include <cstdarg>
 #include <cstdio>
 #include <vector>
 #include <string>
@@ -20,7 +19,6 @@ public:
 		}
 		singleton = this;
 	}
-
 	~PanelConsole() override {}
 
 	static PanelConsole *get_singleton() { return singleton; }
@@ -31,14 +29,7 @@ public:
 		error
 	};
 
-	void log(LogLevel level, const char *fmt, ...) {
-		std::va_list args;
-		va_start(args, fmt);
-		char text[BUFFER_SIZE];
-		std::snprintf(text, BUFFER_SIZE, fmt, args);
-		contents.emplace_back(ConsoleEntry(level, text));
-		va_end(args);
-	}
+	void log(LogLevel level, const char *fmt, ...); 
 
 private:
 	struct ConsoleEntry {
@@ -65,12 +56,5 @@ private:
 	std::vector<ConsoleEntry> contents;
 	static const size_t BUFFER_SIZE = 256;
 	static inline PanelConsole *singleton = nullptr;
-	void render_this() override {
-		if (ImGui::Button("Clear")) {
-			contents.clear();
-		}
-		for (auto entry : contents) {
-			ImGui::TextColored(entry.get_color(), "%s", entry.text.c_str());
-		}
-	}
+	void render_this() override; 
 };
