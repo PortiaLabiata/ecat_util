@@ -7,6 +7,7 @@
 class WelcomePanel : public Panel {
 public:
 	PANEL_CONSTRUCTOR(WelcomePanel);
+	WelcomePanel(ImVec2 size) : Panel(size, "Welcome") { scan_adapters(); }
 	~WelcomePanel() override {};
 
 	const char *get_selected_iface() const {

@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 	PanelConsole *console = nullptr;
 
 	auto window = std::make_unique<Window>(ImVec2{600, 600}, "EtherCAT Utility");
-	auto welcome = new WelcomePanel(ImVec2{600, 600}, "Welcome");
+	auto welcome = new WelcomePanel(ImVec2{600, 600});
 	window->set_welcome_panel(welcome);
 
 	while (!window->should_exit()) {
@@ -23,8 +23,7 @@ int main(int argc, char **argv) {
 
 			auto adapter_name = welcome->get_selected_iface();
 			master = new ECATMaster(adapter_name);
-			slaves = new PanelSlaves(ImVec2{600, 600}, "Slaves");
-			slaves->attach_ecat(master);
+			slaves = new PanelSlaves(ImVec2{600, 600}, master);
 
 			window->add_panel(console);
 			window->add_panel(slaves);

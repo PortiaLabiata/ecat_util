@@ -23,31 +23,31 @@ struct Entry {
 
 class EEPInfoView : public SlaveView {
 public:
-	EEPInfoView() = default;
-	~EEPInfoView() override {}
-
 	void render() override;
 private:
 	std::vector<Entry> make_entries(const ec_slavet &info);
 };
 
-// This is horrifying, but I couldn't think of anything else yet. If you figure it out - 
-// feel free to submit a pull request.
+class TableMasterView : public MasterView {
+public:
+	void render() override;
+};
 
 class PanelSlaves : public Panel {
 public:
-	PanelSlaves(ImVec2 size, const char *title) : Panel(size, title) {
-		selected_slave = static_cast<ECATSlave*>(&dummy);	
-		info_view.set_slave(selected_slave);
+	PanelSlaves(ImVec2 size, ECATMaster *master) : Panel(size, "Slaves") {
+		table_master.set_object(master);
+		table_master.attach_view(&eep_info);
+		table_master.update_views(&dummy);
 	}
 
 	~PanelSlaves() override {}; 
-	void attach_ecat(ECATMaster *_master) { master = _master; }
 private:
-	ECATMaster *master = nullptr;
-	ECATSlave *selected_slave = nullptr;
+	TableMasterView table_master;
+	EEPInfoView eep_info;
+
+	ECATSlave *selected_slave = static_cast<ECATSlave*>(&dummy);
 	static const size_t slave_info_size = 15;
-	EEPInfoView info_view;
 
 	void render_this() override; 
 	void render_controls(); 

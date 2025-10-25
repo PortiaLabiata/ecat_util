@@ -1,4 +1,5 @@
 #pragma once
+#include <list>
 #include <imgui.h>
 #include <ecat/core.hpp>
 
@@ -33,13 +34,35 @@ private:
 	}
 };
 
-class SlaveView {
+template <typename T>
+class View {
 public:
-	SlaveView() {}
-	virtual ~SlaveView() {}
+	virtual ~View() {}
 
-	void set_slave(ECATSlave *_slave) { slave = _slave; }
-	virtual void render() = 0;
+	void set_object(T *_obj) { obj = _obj; }
 protected:
-	ECATSlave *slave;
+	T *obj = nullptr;
 };
+
+class SlaveView : public View<ECATSlave>{
+public:
+	~SlaveView() override {}
+	virtual void render() = 0;
+};
+
+class MasterView : public View<ECATMaster> {
+public:
+	~MasterView() override {}
+	virtual void render() = 0;
+
+	void attach_view(SlaveView *view) { attached_views.push_back(view); }
+	void update_views(ECATSlave *slave) {
+		for (const auto &view : attached_views) {
+			view->set_object(slave);
+		}
+	}
+
+protected:
+	std::list<SlaveView*> attached_views;
+};
+
