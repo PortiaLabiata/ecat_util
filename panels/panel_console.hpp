@@ -1,60 +1,42 @@
 #pragma once
+#include <feedback/logger.hpp>
 #include "panel.hpp"
-#include <cstdio>
-#include <vector>
-#include <string>
-#include <stdarg.h>
 
 #define COLOR_STATUS ImVec4{0, 1, 0, 1}
 #define COLOR_DEBUG ImVec4{1, 1, 1, 1}
 #define COLOR_ERROR ImVec4{1, 0, 0, 1}
 
-struct SingletonError {};
+class LogView : public View<Logger> {
+public:
+	LogView() { set_object(Logger::get_singleton()); }
+	virtual void render() = 0;
+};
+
+class ConsoleLogView : public LogView {
+public:
+	void render() override;
+private:
+	ImVec4 get_color(Logger::Severity severity) {
+		switch (severity) {
+			case Logger::Severity::Debug:
+			case Logger::Severity::Log:
+				return COLOR_DEBUG;
+			case Logger::Severity::Warning:
+				return COLOR_STATUS;
+			case Logger::Severity::Error:
+				return COLOR_ERROR;
+			default:
+				return ImVec4{0, 0, 0, 1};
+		}
+	}
+};
 
 class PanelConsole : public Panel {
 public:
-	PanelConsole(ImVec2 size) : Panel(size, "Console") {
-		if (singleton) {
-			throw SingletonError();
-		}
-		singleton = this;
+	PanelConsole(ImVec2 size) : Panel(size, "Console") {}
+	void render_this() override {
+		log_view.render();	
 	}
-	~PanelConsole() override {}
-
-	static PanelConsole *get_singleton() { return singleton; }
-
-	enum class LogLevel {
-		debug = 0,
-		status,
-		error
-	};
-
-	void log(LogLevel level, const char *fmt, ...); 
-
 private:
-	struct ConsoleEntry {
-		ConsoleEntry(LogLevel _level, const char *_text) :
-			level(_level), text(std::string(_text)) {};
-
-		const LogLevel level;
-		std::string text;
-
-		ImVec4 get_color() {
-			switch (level) {
-				case LogLevel::debug:
-					return COLOR_DEBUG;
-				case LogLevel::status:
-					return COLOR_STATUS;
-				case LogLevel::error:
-					return COLOR_ERROR;
-				default:
-					return COLOR_STATUS;
-			}
-		}
-	};
-
-	std::vector<ConsoleEntry> contents;
-	static const size_t BUFFER_SIZE = 256;
-	static inline PanelConsole *singleton = nullptr;
-	void render_this() override; 
+	ConsoleLogView log_view;
 };

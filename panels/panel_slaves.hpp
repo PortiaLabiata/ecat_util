@@ -20,6 +20,8 @@ struct Entry {
 };
 
 class EEPInfoView : public SlaveView {
+	friend class MasterView;
+	EEPInfoView() = default;
 public:
 	void render() override;
 private:

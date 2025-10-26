@@ -1,3 +1,3 @@
 add_library(ecat core.cpp util.cpp)
 target_include_directories(ecat PUBLIC "lib/SOEM/osal/linux")
-target_link_libraries(ecat PUBLIC soem)
+target_link_libraries(ecat PUBLIC soem feedback)

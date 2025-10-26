@@ -97,6 +97,8 @@ public:
 
 protected:
 	// FIXME: If SlaveView is deleted, updating it will cause segfault!
+	// Add method like ptr_lookup() and remove list entry from SlaveView's
+	// destructor
 	std::list<SlaveView*> attached_views;
 };
 

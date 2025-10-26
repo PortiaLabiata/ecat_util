@@ -1,10 +1,11 @@
+#include <feedback/logger.hpp>
 #include "core.hpp"
-#include "panels/panel_console.hpp"
 
 ECATMaster::ECATMaster(const char *iface_name) {
 	if (ecx_init(&ctx, iface_name) <= 0) {
-		PanelConsole::get_singleton()->log(PanelConsole::LogLevel::error, "Couldn't init iface, run as root");
+		EC::errstream() << "Couldn't init iface, execute as root";
 	}
+	scan_bus();
 }
 
 ECATMaster::~ECATMaster() {
@@ -13,18 +14,21 @@ ECATMaster::~ECATMaster() {
 
 void ECATMaster::scan_bus() {
 	if (ecx_config_init(&ctx) <= 0) {
-			PanelConsole::get_singleton()->log(PanelConsole::LogLevel::error, "Couldn't config any slaves");
+		EC::errstream() << "Couldn't config any slaves";
 	}
 	group = &ctx.grouplist[0];
-	if (ecx_config_map_group(&ctx, reinterpret_cast<void*>(iomap), 0) > static_cast<int>(IOMAP_SIZE)) {
-			PanelConsole::get_singleton()->log(PanelConsole::LogLevel::error, "IOMap buffer overflow");
+	auto bsize = ecx_config_map_group(&ctx, reinterpret_cast<void*>(iomap), 0);
+	if (bsize > static_cast<int>(IOMAP_SIZE)) {
+		EC::errstream() << "IOMap buffer overflown by " << bsize - IOMAP_SIZE << " bytes";
 	}
 	ecx_configdc(&ctx);
 	expected_wkc = (group->outputsWKC * 2) + group->inputsWKC;
+	EC::logstream() << "Expected WKC: " << expected_wkc;
 
 	slaves.clear();
 	for (int i = 0; i < ctx.slavecount; i++) {
 		slaves.emplace_back(ECATSlave(&ctx, i));		
+		EC::logstream() << "Detected slave with configaddr=" << ctx.slavelist[i].configadr;
 	}
 }
 

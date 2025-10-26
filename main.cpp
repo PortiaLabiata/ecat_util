@@ -1,6 +1,7 @@
+#include <memory>
+#include <feedback/logger.hpp>
 #include "window.hpp"
 #include "ecat/core.hpp"
-#include <memory>
 #include "panels/panels.hpp"
 
 int main(int argc, char **argv) {
@@ -14,6 +15,7 @@ int main(int argc, char **argv) {
 	auto window = std::make_unique<Window>(ImVec2{600, 600}, "EtherCAT Utility");
 	auto welcome = new WelcomePanel(ImVec2{600, 600});
 	window->set_welcome_panel(welcome);
+	EC::logstream() << "Starting application";
 
 	while (!window->should_exit()) {
 		window->loop();
