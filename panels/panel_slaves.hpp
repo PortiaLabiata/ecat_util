@@ -7,8 +7,6 @@
 #include "panel.hpp"
 
 #define TEXT_COLUMN(__FMT__, __ARGS__) ImGui::TableNextColumn(); ImGui::Text(__FMT__, __ARGS__)
-#define BEGIN_ENTRIES auto entry = output
-#define ENTRY(__LABEL__, __VALUE__) *(entry++) = std::make_pair(__LABEL__, std::format("{}", __VALUE__))
 
 static ECATSlaveDummy dummy;
 
@@ -37,14 +35,14 @@ class PanelSlaves : public Panel {
 public:
 	PanelSlaves(ImVec2 size, ECATMaster *master) : Panel(size, "Slaves") {
 		table_master.set_object(master);
-		table_master.attach_view(&eep_info);
+		eep_info = table_master.construct_slave_view<EEPInfoView>();
 		table_master.update_views(&dummy);
 	}
 
 	~PanelSlaves() override {}; 
 private:
 	TableMasterView table_master;
-	EEPInfoView eep_info;
+	EEPInfoView *eep_info;
 
 	ECATSlave *selected_slave = static_cast<ECATSlave*>(&dummy);
 	static const size_t slave_info_size = 15;

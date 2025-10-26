@@ -33,8 +33,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	delete console;
-	delete slaves;
+	Panel::delete_all();
 	delete master;
 	return 0;
 }

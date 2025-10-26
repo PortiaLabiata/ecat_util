@@ -57,7 +57,7 @@ end:
 
 void PanelSlaves::render_this() {
 	table_master.render();
-	eep_info.render();
+	eep_info->render();
 }
 
 void PanelSlaves::render_controls() {
