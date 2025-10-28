@@ -1,5 +1,6 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
+#include <feedback/logger.hpp>
 #include "window.hpp"
 
 Window::Window(ImVec2 dims, const char *title) {
@@ -49,16 +50,28 @@ void Window::render_panels() {
 	switch (state) {
 		case State::welcome:
 			welcome_screen->render();
+			if (welcome_screen->is_done()) {
+				create_panels();
+				state = State::main;
+				welcome_screen.reset();
+			}
 			break;
 		case State::main:
 		default:
-			for (auto panel : panels) {
+			for (const auto &panel : panels) {
 				panel->render();
 			}
 			break;
 	}
 }
 
-void Window::add_panel(Panel *panel) {
-	panels.push_back(panel);
+void Window::create_panels() {
+	const char *adapter_name = welcome_screen->get_selected_iface();
+	Log::logstream() << "Selected iface " << adapter_name;
+	master = std::make_shared<ECATMaster>(adapter_name);
+	console = std::make_unique<PanelConsole>(ImVec2{600, 600});
+	slaves = std::make_unique<PanelSlaves>(ImVec2{600, 600}, master);
+
+	add_panel(console);
+	add_panel(slaves);
 }

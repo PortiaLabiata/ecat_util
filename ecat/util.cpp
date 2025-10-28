@@ -1,5 +1,7 @@
 #include "util.hpp"
 
+namespace EC {
+
 std::string mb_to_str(uint16_t bitmask) {
 	std::string res;
 	if (bitmask & ECT_MBXPROT_COE) {
@@ -30,4 +32,27 @@ const char *fmmu_to_str(uint8_t func) {
 		default:
 			return "";
 	}
+}
+
+const char *ec_state_to_str(ec_state state) {
+	switch (state) {
+		case EC_STATE_NONE:
+			return "None";
+		case EC_STATE_INIT:
+			return "Init";
+		case EC_STATE_PRE_OP:
+			return "PreOp";
+		case EC_STATE_SAFE_OP:
+			return "SafeOp";
+		case EC_STATE_OPERATIONAL:
+			return "Op";
+		case EC_STATE_BOOT:
+			return "Boot";
+		case EC_STATE_ACK:
+			return "Ack";
+		default:
+			return "Invalid";
+	}
+}
+
 }

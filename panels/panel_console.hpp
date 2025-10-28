@@ -3,10 +3,11 @@
 #include "panel.hpp"
 
 #define COLOR_STATUS ImVec4{0, 1, 0, 1}
+#define COLOR_WARNING ImVec4{1, 1, 0, 1}
 #define COLOR_DEBUG ImVec4{1, 1, 1, 1}
 #define COLOR_ERROR ImVec4{1, 0, 0, 1}
 
-class LogView : public View<Logger> {
+class LogView : public ViewRaw<Logger> {
 public:
 	LogView() { set_object(Logger::get_singleton()); }
 	virtual void render() = 0;
@@ -22,7 +23,7 @@ private:
 			case Logger::Severity::Log:
 				return COLOR_DEBUG;
 			case Logger::Severity::Warning:
-				return COLOR_STATUS;
+				return COLOR_WARNING;
 			case Logger::Severity::Error:
 				return COLOR_ERROR;
 			default:
@@ -40,3 +41,4 @@ public:
 private:
 	ConsoleLogView log_view;
 };
+using PanelConsolePtr = std::unique_ptr<PanelConsole>;

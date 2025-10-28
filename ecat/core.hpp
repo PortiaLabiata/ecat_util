@@ -1,4 +1,6 @@
 #pragma once
+#include <memory>
+#include <queue>
 #include <inttypes.h>
 #include <vector>
 #include <cstdio>
@@ -16,16 +18,20 @@ public:
 	}
 
 	void set_state(ec_state state, unsigned int timeout_ms);
+	ec_state update_state();
 	ec_state get_state();
+	bool link_up() { return !ctx->slavelist[index].islost; }; 
 
 private:
 	void fill_from_ecx(const ec_slavet &slave);
+	bool fsm_trans_valid(ec_state new_state);
 
 	// I hate it, but should work, since ctx is not supposed to be null
 	// until the execution stops
 	ecx_context *ctx;
 	const size_t index;
 };
+using ECATSlavePtr = std::shared_ptr<ECATSlave>;
 
 class ECATSlaveDummy : public ECATSlave {
 public:
@@ -42,6 +48,7 @@ public:
 private:
 	ecx_context mock_ctx;
 };
+using ECATSlaveDummyPtr = std::shared_ptr<ECATSlaveDummy>;
 
 class ECATMaster {
 public:
@@ -49,7 +56,7 @@ public:
 	~ECATMaster();
 
 	void scan_bus();
-	const std::vector<ECATSlave> &get_slaves() const {
+	const std::vector<ECATSlavePtr>& get_slaves() const {
 		return slaves;
 	}
 
@@ -58,14 +65,14 @@ public:
 private:
 	static const size_t IOMAP_SIZE = 4096;
 	
-	// Will do for now, if there are performance issues, move to smart pointers
-	std::vector<ECATSlave> slaves;
+	std::vector<std::shared_ptr<ECATSlave>> slaves;
 
 	ecx_context ctx;
 	ec_groupt *group;
 	uint8 iomap[IOMAP_SIZE];
 	int expected_wkc;
 };
+using ECATMasterPtr = std::shared_ptr<ECATMaster>;
 
 struct BusReadError {
 	const char *circumstances;

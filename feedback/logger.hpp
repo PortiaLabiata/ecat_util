@@ -60,7 +60,7 @@ private:
 	std::stringstream stream;
 };
 
-namespace EC {
+namespace Log {
 	LogStream dbgstream();
 	LogStream logstream();
 	LogStream wrnstream();

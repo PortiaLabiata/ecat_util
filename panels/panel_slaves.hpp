@@ -8,7 +8,7 @@
 
 #define TEXT_COLUMN(__FMT__, __ARGS__) ImGui::TableNextColumn(); ImGui::Text(__FMT__, __ARGS__)
 
-static ECATSlaveDummy dummy;
+static std::shared_ptr<ECATSlaveDummy> dummy = std::make_shared<ECATSlaveDummy>();
 
 struct Entry {
 	std::string label;
@@ -20,12 +20,22 @@ struct Entry {
 };
 
 class EEPInfoView : public SlaveView {
-	friend class MasterView;
-	EEPInfoView() = default;
 public:
+	EEPInfoView() = default;
 	void render() override;
 private:
 	std::vector<Entry> make_entries(const ec_slavet &info);
+};
+
+class SlaveStateView : public SlaveView {
+public:
+	void render() override;
+private:
+	ec_state render_controls();
+	void render_status();
+	std::vector<Entry> make_entries(const ec_slavet &info);
+
+	static constexpr ImVec2 BUTTON_SIZE = ImVec2{50, 30}; 
 };
 
 class TableMasterView : public MasterView {
@@ -35,20 +45,21 @@ public:
 
 class PanelSlaves : public Panel {
 public:
-	PanelSlaves(ImVec2 size, ECATMaster *master) : Panel(size, "Slaves") {
+	PanelSlaves(ImVec2 size, std::shared_ptr<ECATMaster> master) : Panel(size, "Slaves") {
 		table_master.set_object(master);
-		eep_info = table_master.construct_slave_view<EEPInfoView>();
-		table_master.update_views(&dummy);
+
+		table_master.construct_slave_view<EEPInfoView>();
+		table_master.construct_slave_view<SlaveStateView>();
+
+		table_master.update_views(dummy);
 	}
 
 	~PanelSlaves() override {}; 
 private:
 	TableMasterView table_master;
-	EEPInfoView *eep_info;
-
-	ECATSlave *selected_slave = static_cast<ECATSlave*>(&dummy);
+	std::weak_ptr<ECATSlave> selected_slave = dummy;
 	static const size_t slave_info_size = 15;
 
 	void render_this() override; 
-	void render_controls(); 
 };
+using PanelSlavesPtr = std::unique_ptr<PanelSlaves>;

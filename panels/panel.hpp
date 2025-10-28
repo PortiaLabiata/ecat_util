@@ -7,23 +7,9 @@
 
 class Panel {
 public:
-	Panel(ImVec2 _size, const char *_title) : title(_title), size(_size) {
-		instances.push_back(this);
-	}
+	Panel(ImVec2 _size, const char *_title) : title(_title), size(_size) {}
 
-	virtual ~Panel() {
-		for (auto ptr = instances.begin(); ptr < instances.end(); ptr++) {
-			if (this == *ptr) {
-				instances.erase(ptr);	
-			}
-		}
-	}; 
-
-	static void delete_all() {
-		for (auto panel : instances) {
-			delete panel;
-		}
-	}
+	virtual ~Panel() = default;	
 
 	void render() {
 		ImGui::Begin(title);
@@ -35,8 +21,8 @@ private:
 	virtual void render_this() = 0;
 	const char *title;
 	const ImVec2 size;
-	static std::vector<Panel*> instances;
 };
+using PanelPtr = std::unique_ptr<Panel>;
 
 class PanelEmpty : public Panel {
 public:
@@ -50,11 +36,25 @@ private:
 template <typename T>
 class View {
 public:
+	View(std::shared_ptr<T> _obj) : obj(_obj) {}
+	View() = default;
 	virtual ~View() {}
 
+	void set_object(std::shared_ptr<T> _obj) { obj = _obj; }
+protected:
+	std::weak_ptr<T> obj;
+};
+
+template <typename T>
+class ViewRaw {
+public:
+	ViewRaw(T *_obj) : obj(_obj) {}
+	ViewRaw() = default;
+	virtual ~ViewRaw() {}
+	
 	void set_object(T *_obj) { obj = _obj; }
 protected:
-	T *obj = nullptr;
+	T *obj;
 };
 
 // Do not create with default constructor,
@@ -64,41 +64,37 @@ public:
 	~SlaveView() override {}
 	virtual void render() = 0;
 };
+using SlaveViewPtr = std::unique_ptr<SlaveView>;
 
 
 class MasterView : public View<ECATMaster> {
 public:
 	MasterView() = default;
-	MasterView(ECATMaster *master) : View<ECATMaster>() {
-		set_object(master);
-	}
+	MasterView(std::shared_ptr<ECATMaster> master) : View<ECATMaster>(master) {}
 
 	~MasterView() override {
-		for (auto view : attached_views) {
-			delete view;
+		for (auto& view : attached_views) {
+			// FIXME: add lock check?
+			view.reset();
 		}
 	}
 	virtual void render() = 0;
 
 	// Factory method
 	template <typename T>
-	T *construct_slave_view() {
-		T *view = new T();
-		attach_view(view);
-		return view;
+	void construct_slave_view() {
+		std::unique_ptr<T> view = std::make_unique<T>();
+		attached_views.push_back(std::move(view));
 	}
 
-	void attach_view(SlaveView *view) { attached_views.push_back(view); }
-	void update_views(ECATSlave *slave) {
+	void update_views(ECATSlavePtr slave) {
 		for (const auto &view : attached_views) {
 			view->set_object(slave);
 		}
 	}
 
 protected:
-	// FIXME: If SlaveView is deleted, updating it will cause segfault!
-	// Add method like ptr_lookup() and remove list entry from SlaveView's
-	// destructor
-	std::list<SlaveView*> attached_views;
+	std::list<SlaveViewPtr> attached_views;
 };
+using MasterViewPtr = std::unique_ptr<MasterView>;
 

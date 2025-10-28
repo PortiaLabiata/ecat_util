@@ -34,7 +34,7 @@ const char *Logger::severity_to_str(Logger::Severity severity) {
 	}
 }
 
-namespace EC {
+namespace Log {
 	LogStream dbgstream() { return LogStream(logger, Logger::Severity::Debug); }
 	LogStream logstream() { return LogStream(logger, Logger::Severity::Log); }
 	LogStream wrnstream() { return LogStream(logger, Logger::Severity::Warning); }
