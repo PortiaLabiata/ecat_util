@@ -8,12 +8,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(LIB_PATH lib)
 set(SUBMODULES panels common)
 
-add_compile_options(
-	-Werror
-	-Wall
-	-Wextra
-	-lm
-)
+if (MSVC)
+	add_compile_options(/W4 /WX /DEBUG)
+else()
+	add_compile_options(
+		-Werror
+		-Wall
+		-Wextra
+		-lm
+	)
+endif()
 
 add_executable(main main.cpp window.cpp)
 include_directories(${LIB_PATH}/imgui)

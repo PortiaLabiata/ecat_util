@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <queue>
+#include <thread>
 #include <inttypes.h>
 #include <vector>
 #include <cstdio>
@@ -25,6 +26,57 @@ public:
 private:
 	void fill_from_ecx(const ec_slavet &slave);
 	bool fsm_trans_valid(ec_state new_state);
+	void exhaust_queue();
+
+	enum class Action {
+		SetState,
+	};
+
+	struct Context {
+		std::mutex mtx;
+		ec_state state;
+	};
+
+	struct ContextGuard{
+		ContextGuard(Context *_ctx) : ctx(_ctx) {
+			_ctx->mtx.lock();	
+		}
+		~ContextGuard() {
+			ctx->mtx.unlock();
+		}
+	private:
+		Context *ctx;
+	};
+
+	struct ActionQueue {
+		std::mutex mtx;
+		std::queue<Action> queue;
+
+		void push(Action action) {
+			mtx.lock();
+			queue.push(action);
+			mtx.unlock();
+		}
+
+		Action pop() {
+			mtx.lock();
+			auto temp = queue.front();
+			queue.pop();
+			mtx.unlock();
+			return temp;
+		}
+
+		size_t size() {
+			mtx.lock();
+			auto s = queue.size();
+			mtx.unlock();
+			return s;
+		}
+	};
+
+	Context slave_context;
+	ActionQueue queue;
+	void execute_action(Action action);
 
 	// I hate it, but should work, since ctx is not supposed to be null
 	// until the execution stops
@@ -63,8 +115,64 @@ public:
 	int get_expected_wc() const { return expected_wkc; }
 
 private:
+	enum class Action {
+		ConfigSlaves,
+		UpdateState,
+		ConfigDC,
+	};
+
+	void execute_action(Action action);
+
+	// Stub
+	struct Context {
+		std::mutex mtx;
+		bool stop = false;
+	};
+
+	struct ContextGuard{
+		ContextGuard(Context *_ctx) : ctx(_ctx) {
+			_ctx->mtx.lock();	
+		}
+		~ContextGuard() {
+			ctx->mtx.unlock();
+		}
+	private:
+		Context *ctx;
+	};
+
+	struct ActionQueue {
+		std::queue<Action> queue;
+
+		void push(Action action) {
+			mtx.lock();
+			queue.push(action);
+			mtx.unlock();
+		}
+
+		Action pop() {
+			mtx.lock();
+			auto temp = queue.front();
+			queue.pop();
+			mtx.unlock();
+			return temp;
+		}
+
+		size_t size() {
+			mtx.lock();
+			auto s = queue.size();
+			mtx.unlock();
+			return s;
+		}
+	private:
+		std::mutex mtx;
+	};
+
 	static const size_t IOMAP_SIZE = 4096;
-	
+	void iothread_func();
+	std::thread iothread;
+	Context master_context;
+	ActionQueue queue;
+
 	std::vector<std::shared_ptr<ECATSlave>> slaves;
 
 	ecx_context ctx;

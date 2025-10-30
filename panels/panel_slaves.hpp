@@ -43,10 +43,16 @@ public:
 	void render() override;
 };
 
+class BasicMasterView : public MasterView {
+public:
+	void render() override;
+};
+
 class PanelSlaves : public Panel {
 public:
 	PanelSlaves(ImVec2 size, std::shared_ptr<ECATMaster> master) : Panel(size, "Slaves") {
 		table_master.set_object(master);
+		basic_master.set_object(master);
 
 		table_master.construct_slave_view<EEPInfoView>();
 		table_master.construct_slave_view<SlaveStateView>();
@@ -56,10 +62,12 @@ public:
 
 	~PanelSlaves() override {}; 
 private:
+	BasicMasterView basic_master;
 	TableMasterView table_master;
 	std::weak_ptr<ECATSlave> selected_slave = dummy;
 	static const size_t slave_info_size = 15;
 
 	void render_this() override; 
+	void render_plot();
 };
 using PanelSlavesPtr = std::unique_ptr<PanelSlaves>;

@@ -49,6 +49,7 @@ void TableMasterView::render() {
 		TEXT_COLUMN("%d", info.eep_man);
 		ImGui::TableNextColumn(); 
 		if (ImGui::Button("Select")) {
+			slave->update_state();
 			update_views(slave);
 		}
 	}
@@ -61,6 +62,7 @@ end:
 }
 
 void PanelSlaves::render_this() {
+	basic_master.render();
 	table_master.render();
 }
 
@@ -88,7 +90,7 @@ void SlaveStateView::render_status() {
 	ImGui::TableNextColumn(); ImGui::TextUnformatted("AL status");
 	ImGui::TableNextColumn(); ImGui::TextUnformatted(ec_ALstatuscode2string(obj.lock()->get_slaveinfo().ALstatuscode));
 	ImGui::TableNextColumn(); ImGui::TextUnformatted("ECAT state");
-	ImGui::TableNextColumn(); ImGui::TextUnformatted(EC::ec_state_to_str(static_cast<ec_state>(obj.lock()->get_slaveinfo().state)));
+	ImGui::TableNextColumn(); ImGui::TextUnformatted(EC::ec_state_to_str(obj.lock()->get_state()));
 	ImGui::TableNextColumn(); if (ImGui::Button("CoE")) asm("nop"); // Open CoE panel
 	ImGui::EndTable();
 	ImGui::EndGroup();
@@ -102,4 +104,26 @@ void SlaveStateView::render() {
 	if (state != EC_STATE_NONE && state != EC_STATE_ACK) {
 		obj.lock()->set_state(state, 0);
 	}
+}
+
+void BasicMasterView::render() {
+	auto master_ptr = obj.lock();
+	int total_current = 0;
+	for (const auto& slave : master_ptr->get_slaves()) {
+		total_current += slave->get_slaveinfo().Ebuscurrent;
+	}
+
+	ImGui::TextUnformatted("Link stats");
+	ImGui::BeginTable("Link stats", 2);
+	ImGui::TableNextColumn(); ImGui::TextUnformatted("#slaves");
+	ImGui::TableNextColumn(); ImGui::Text("%ld", master_ptr->get_slaves().size());
+	ImGui::TableNextColumn(); ImGui::TextUnformatted("Expected WKC");
+	ImGui::TableNextColumn(); ImGui::Text("%d", master_ptr->get_expected_wc());
+	ImGui::TableNextColumn(); ImGui::TextUnformatted("EBUS current, mA");
+	ImGui::TableNextColumn(); ImGui::Text("%d", total_current);
+	ImGui::EndTable();
+}
+
+void render_plot() {
+	
 }
