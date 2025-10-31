@@ -7,6 +7,49 @@
 #include <cstdio>
 #include <soem/soem.h>
 
+template <typename T>
+struct ActionQueue {
+	std::mutex mtx;
+	std::queue<T> queue;
+
+	void push(T action) {
+		mtx.lock();
+		queue.push(action);
+		mtx.unlock();
+	}
+
+	T pop() {
+		mtx.lock();
+		auto temp = queue.front();
+		queue.pop();
+		mtx.unlock();
+		return temp;
+	}
+
+	size_t size() {
+		mtx.lock();
+		auto s = queue.size();
+		mtx.unlock();
+		return s;
+	}
+};
+
+struct ContextPhony {
+	std::mutex mtx;
+};
+
+struct ContextGuard {
+	ContextGuard(ContextPhony *_ctx) : ctx(_ctx) {
+		_ctx->mtx.lock();	
+	}
+	~ContextGuard() {
+		ctx->mtx.unlock();
+	}
+private:
+	ContextPhony *ctx;
+};
+
+
 class ECATSlave {
 	friend class ECATMaster;
 	friend class ECATSlaveDummy;
@@ -32,50 +75,12 @@ private:
 		SetState,
 	};
 
-	struct Context {
-		std::mutex mtx;
+	struct Context : public ContextPhony {
 		ec_state state;
 	};
 
-	struct ContextGuard{
-		ContextGuard(Context *_ctx) : ctx(_ctx) {
-			_ctx->mtx.lock();	
-		}
-		~ContextGuard() {
-			ctx->mtx.unlock();
-		}
-	private:
-		Context *ctx;
-	};
-
-	struct ActionQueue {
-		std::mutex mtx;
-		std::queue<Action> queue;
-
-		void push(Action action) {
-			mtx.lock();
-			queue.push(action);
-			mtx.unlock();
-		}
-
-		Action pop() {
-			mtx.lock();
-			auto temp = queue.front();
-			queue.pop();
-			mtx.unlock();
-			return temp;
-		}
-
-		size_t size() {
-			mtx.lock();
-			auto s = queue.size();
-			mtx.unlock();
-			return s;
-		}
-	};
-
 	Context slave_context;
-	ActionQueue queue;
+	ActionQueue<Action> queue;
 	void execute_action(Action action);
 
 	// I hate it, but should work, since ctx is not supposed to be null
@@ -124,54 +129,15 @@ private:
 	void execute_action(Action action);
 
 	// Stub
-	struct Context {
-		std::mutex mtx;
+	struct Context : public ContextPhony {
 		bool stop = false;
-	};
-
-	struct ContextGuard{
-		ContextGuard(Context *_ctx) : ctx(_ctx) {
-			_ctx->mtx.lock();	
-		}
-		~ContextGuard() {
-			ctx->mtx.unlock();
-		}
-	private:
-		Context *ctx;
-	};
-
-	struct ActionQueue {
-		std::queue<Action> queue;
-
-		void push(Action action) {
-			mtx.lock();
-			queue.push(action);
-			mtx.unlock();
-		}
-
-		Action pop() {
-			mtx.lock();
-			auto temp = queue.front();
-			queue.pop();
-			mtx.unlock();
-			return temp;
-		}
-
-		size_t size() {
-			mtx.lock();
-			auto s = queue.size();
-			mtx.unlock();
-			return s;
-		}
-	private:
-		std::mutex mtx;
 	};
 
 	static const size_t IOMAP_SIZE = 4096;
 	void iothread_func();
 	std::thread iothread;
 	Context master_context;
-	ActionQueue queue;
+	ActionQueue<Action> queue;
 
 	std::vector<std::shared_ptr<ECATSlave>> slaves;
 
